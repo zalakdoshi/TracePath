@@ -1,0 +1,16 @@
+{
+  "name": "tracepath",
+  "private": true,
+  "version": "1.0.0",
+  "description": "TracePath - Supply Chain Tracker on Blockchain",
+  "scripts": {
+    "install:all": "npm install && cd blockchain && npm install && cd ../backend && npm install && cd ../frontend && npm install && cd ..",
+    "compile": "cd blockchain && npm run compile",
+    "node": "cd blockchain && npm run node",
+    "deploy:local": "cd blockchain && npm run deploy:local",
+    "deploy:sepolia": "cd blockchain && npm run deploy:sepolia",
+    "backend": "cd backend && npm start",
+    "frontend": "cd frontend && npm run dev",
+    "dev": "npm run node & npm run backend & npm run frontend"
+  }
+}
