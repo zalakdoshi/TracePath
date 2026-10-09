@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { Contract, JsonRpcProvider, toChecksumAddress } from 'ethers';
+import { Contract, JsonRpcProvider, getAddress } from 'ethers';
 import { initDB } from './db.js';
 import { createBatchesRouter } from './routes/batches.js';
 import { readFileSync } from 'fs';
@@ -36,7 +36,7 @@ try {
 // Initialize ethers provider and contract
 const provider = new JsonRpcProvider(process.env.RPC_URL || 'http://127.0.0.1:8545');
 const contract = new Contract(
-  toChecksumAddress(contractInfo.address),
+  getAddress(contractInfo.address),
   contractInfo.abi,
   provider
 );
