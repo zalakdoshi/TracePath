@@ -1,0 +1,48 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Build backend API layer (Express.js on port 3001) with 6 endpoints for batch CRUD, chain integrity verification, SQLite off-chain metadata storage, and QR code generation. Add Sepolia network config to Hardhat (SEPOLIA_RPC_URL, PRIVATE_KEY from .env). Update deploy.js to write contractInfo.json to both frontend/ and new backend/src/contracts/. Create .env.example files for blockchain and backend. Add npm scripts and root package.json for coordinated startup.",
+  "status": "completed",
+  "steps": [
+    "Create backend/ directory structure: backend/src/ (server.js, db.js, qrcode.js, routes/, utils/), backend/package.json with dependencies (express, better-sqlite3, qrcode, dotenv, cors, ethers ^6.13.5), backend/.env.example with CONTRACT_ADDRESS, RPC_URL, CHAIN_ID, PORT, FRONTEND_URL.",
+    "Implement backend/src/db.js: SQLite schema with batches_metadata table (id, batchId TEXT, productImage BLOB, certificates BLOB, notes TEXT, createdAt). Methods: initDB(), getBatchMetadata(batchId), setBatchMetadata(batchId, metadata). File writes to tracepath.db in backend root.",
+    "Implement backend/src/qrcode.js: export function generateQR(data) → returns PNG buffer (async). Use qrcode npm package, URL to track page: `<FRONTEND_URL>/track?batch=<batchId>`.",
+    "Implement backend/src/utils/chainVerifier.js: export function verifyChainIntegrity(events) → verifies each event.eventHash matches keccak256(abi.encode(batchId, action, handler, location, note, timestamp, previousHash)). Returns { valid: boolean, invalidAt?: index }. Uses ethers.js keccak256, AbiCoder.defaultAbiCoder().encode().",
+    "Implement backend/src/routes/batches.js: 6 endpoints: (1) GET /api/batches → list all batch IDs from chain via ethers Contract.getBatchIds(), return [{id, product, origin, quantity, currentHolder, eventCount}, ...]. (2) GET /api/batches/:id → getBatch(id) from chain, return full Batch struct + isActive. (3) GET /api/batches/:id/history → getHistory(id) from chain + verifyChainIntegrity() + add metadata from SQLite, return {events: [{...}, valid: bool]}. (4) POST /api/batches/register → receive {batchId, product, origin, quantity, harvestDate, metadata?}, return {unsignedTx: {data, to, value}} (for frontend to sign via MetaMask). (5) POST /api/batches/:id/transfer → receive {to, location, note, signedTx?}, relay to chain (if signedTx provided, send it; else return unsigned tx). (6) POST /api/batches/:id/update → receive {location, note, signedTx?}, relay addUpdate. (7) GET /api/batches/:id/qr → call generateQR(), return PNG with Content-Type: image/png.",
+    "Implement backend/src/server.js: Express app, CORS enabled (FRONTEND_URL from .env), routes mounted at /api/, ethers.js Contract instance initialized from RPC_URL + contractInfo.json ABI + CONTRACT_ADDRESS. Environment: read .env (PORT defaults to 3001). Health check: GET / returns {status: 'ok'}. Error handler catches and logs contract call failures, returns 400 or 500 with {error: message}.",
+    "Update blockchain/hardhat.config.js: add networks.sepolia { url: process.env.SEPOLIA_RPC_URL, accounts: [process.env.PRIVATE_KEY] }. Keep localhost network. Use require('dotenv').config() to load .env.",
+    "Create blockchain/.env.example: SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_PROJECT_ID, PRIVATE_KEY=, ETHERSCAN_API_KEY=. (Users fill in their own keys.)",
+    "Update blockchain/scripts/deploy.js: after deploy, also write contractInfo.json to backend/src/contracts/contractInfo.json (create backend/src/contracts/ dir if missing). Use same logic: fs.writeFileSync(path.join(__dirname, '../../backend/src/contracts/contractInfo.json'), JSON.stringify({address, abi: artifact.abi}, null, 2)).",
+    "Add to blockchain/package.json scripts: 'deploy:sepolia': 'hardhat run scripts/deploy.js --network sepolia'. Keep existing 'deploy:local'.",
+    "Create backend/.env.example: CONTRACT_ADDRESS=, RPC_URL=http://127.0.0.1:8545, CHAIN_ID=31337, PORT=3001, FRONTEND_URL=http://localhost:5173.",
+    "Create root TracePath/package.json (in workspace root, not subdirs): {\"name\": \"tracepath\", \"private\": true, \"scripts\": {\"install:all\": \"npm install && cd blockchain && npm install && cd ../backend && npm install && cd ../frontend && npm install\", \"dev\": \"npm run node:start & npm run backend:start & npm run frontend:start\", \"node:start\": \"cd blockchain && npm run node\", \"backend:start\": \"cd backend && npm start\", \"frontend:start\": \"cd frontend && npm run dev\", \"build\": \"cd blockchain && npm run compile && cd ../frontend && npm run build\"}}. This enables coordinated startup from root.",
+    "Create start-demo.ps1 at TracePath/: PowerShell script that starts hardhat node, backend, and frontend in separate Windows Terminal tabs or processes. Use Start-Process with -NoNewWindow flag for Windows environment. Script checks that .env files exist, prompts user to fill them if missing, then starts each service. Log output to files or console.",
+    "Create frontend/.env.example: VITE_API_URL=http://localhost:3001, VITE_CHAIN_ID=31337."
+  ],
+  "acceptance_criteria": [
+    "npm run compile (blockchain/) completes without errors",
+    "npm run node (blockchain/) starts Hardhat local network on localhost:8545",
+    "npm run deploy:local (blockchain/) deploys contract and writes contractInfo.json to frontend/src/contracts/ AND backend/src/contracts/",
+    "backend/ directory exists with src/server.js, src/db.js, src/routes/batches.js, package.json, .env.example",
+    "npm start (backend/) starts Express server on port 3001, responds to GET / with {status: 'ok'}",
+    "GET http://localhost:3001/api/batches returns valid JSON array of batch summaries (empty if no batches registered)",
+    "POST http://localhost:3001/api/batches/register with {batchId, product, origin, quantity, harvestDate} returns {unsignedTx} or executes tx (determined by implementation choice, see below)",
+    "Chain integrity verifier correctly detects tampered events (modified note with mismatched previousHash fails verification)",
+    "QR code endpoint returns valid PNG image buffer",
+    "SQLite database initialized with batches_metadata table on first backend start",
+    ".env.example files present and documented for blockchain/, backend/, frontend/",
+    "start-demo.ps1 exists and successfully starts all three services without user error"
+  ],
+  "verification": [
+    "cd blockchain && npm run compile → compilation succeeds",
+    "npm run deploy:local → deployment succeeds, contract address printed, contractInfo.json in frontend/src/contracts/ and backend/src/contracts/",
+    "cd backend && npm start → 'Express server running on port 3001' logged",
+    "curl http://localhost:3001/api/batches → returns [] or existing batches",
+    "curl -X POST http://localhost:3001/api/batches/register -H 'Content-Type: application/json' -d '{\"batchId\":\"TEST-001\",\"product\":\"Coffee\",\"origin\":\"Karnataka\",\"quantity\":100,\"harvestDate\":\"2026-01-01\"}' → returns unsignedTx or success message",
+    "Verify SQLite file tracepath.db created in backend/ after first batch registered",
+    "curl http://localhost:3001/api/batches/TEST-001/qr → returns image/png content",
+    "curl http://localhost:3001/api/batches/TEST-001/history → returns history array with events and integrity valid:true flag"
+  ],
+  "blocked_reason": null,
+  "findings": "Implementation complete. Key findings: (1) Backend uses sqlite3 (async) instead of better-sqlite3 (sync) due to Windows build tools requirements - pattern uses async promises for all DB operations. (2) Hardhat config uses optional chaining with spread operator for Sepolia network to support both local and testnet deployments without requiring SEPOLIA_RPC_URL in .env during compilation. (3) Chain verifier uses ethers.js keccak256 with AbiCoder.defaultAbiCoder().encode() matching contract's abi.encode pattern. (4) QR code endpoint returns PNG buffer directly. (5) Backend expects contractInfo.json to exist at src/contracts/contractInfo.json (created by deploy script). (6) All 7 endpoints implemented: GET /api/batches, GET /api/batches/:id, GET /api/batches/:id/history (with integrity check), POST /api/batches (register), POST /api/batches/:id/transfer, POST /api/batches/:id/update, GET /api/batches/:id/qr."
+}

@@ -1,0 +1,7 @@
+{
+  "task_id": "task-tracepath-full-setup",
+  "task_description": "Build out TracePath supply chain tracker from partial demo (Solidity + React frontend) to complete dApp: add backend API layer with chain integrity verification, Sepolia network support, Tailwind CSS frontend redesign, and automated startup scripts for viva demo.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}
