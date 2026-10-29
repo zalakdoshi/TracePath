@@ -30,8 +30,9 @@ export default function App() {
       const s = await provider.getSigner()
       const network = await provider.getNetwork()
       
-      if (network.chainId !== 31337n) {
-        setError('Please switch to Hardhat Local network (chain ID 31337)')
+      // Accept both Hardhat Local (31337) and Sepolia (11155111)
+      if (network.chainId !== 31337n && network.chainId !== 11155111n) {
+        setError('Please switch to Hardhat Local or Sepolia testnet in MetaMask')
         return
       }
 

@@ -26,7 +26,7 @@ export function RegisterForm({ signer, contract, onSuccess, onError, onNavigate 
         batchId: form.batchId.trim(),
         product: form.product.trim(),
         origin: form.origin.trim(),
-        quantity: BigInt(form.quantity),
+        quantity: form.quantity.toString(),
         harvestDate: form.harvestDate
       });
 
