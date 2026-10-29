@@ -1,64 +1,60 @@
-# TracePath — Blockchain Supply Chain Tracker
+# TracePath 🔗
 
-A starter college mini-project using React + Vite, Solidity, Hardhat, and ethers.js.
+A blockchain-based document tracking system built on the Ethereum Sepolia testnet.
 
-## Requirements
-- Node.js LTS and npm
-- VS Code
-- MetaMask browser extension (for wallet-connected interactions)
+## Features
+- 📄 Document hash registration on blockchain
+- ✅ Tamper-proof document verification
+- 🔐 User authentication
+- 📊 Track document history on-chain
 
-## 1. Install frontend dependencies
-Open a terminal in `TracePath/frontend`:
+## Tech Stack
+- **Frontend:** React, Vite, ethers.js
+- **Backend:** Node.js, Express, SQLite
+- **Blockchain:** Solidity, Sepolia Testnet (Alchemy RPC)
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- MetaMask wallet
+- Alchemy API key (Sepolia)
+
+### Setup
+
+**Backend**
 ```bash
+cd backend
+cp ../.env.example .env    # Fill in your values
 npm install
+npm start
 ```
 
-## 2. Install blockchain dependencies
-Open another terminal in `TracePath/blockchain`:
+**Frontend**
 ```bash
+cd frontend
+cp .env.example .env.local    # Fill in your values
 npm install
-```
-
-## 3. Start a local blockchain
-In `TracePath/blockchain`:
-```bash
-npm run node
-```
-Keep this terminal running. It prints local test accounts and private keys. Use only these local test accounts; never use them with real funds.
-
-## 4. Deploy the smart contract
-Open a second terminal in `TracePath/blockchain`:
-```bash
-npm run deploy:local
-```
-This deploys the contract to the local Hardhat network and writes the address/ABI to `frontend/src/contracts/contractInfo.json`.
-
-## 5. Connect MetaMask to the local network
-Add a network:
-- Network name: Hardhat Local
-- RPC URL: `http://127.0.0.1:8545`
-- Chain ID: `31337`
-- Currency symbol: `ETH`
-
-Import one of the test accounts shown by the local Hardhat node using its displayed private key. These are local-only accounts.
-
-## 6. Start the website
-In `TracePath/frontend`:
-```bash
 npm run dev
 ```
-Open the URL shown (usually `http://localhost:5173`).
 
-## Demo flow
-1. Connect MetaMask.
-2. Register a batch (e.g. B-2026-001, Coffee Beans, Coorg, Karnataka).
-3. Transfer it to another wallet address, or use a second local test account.
-4. Add a quality/status update.
-5. Search the batch ID on the public tracker.
-6. Show the on-chain timeline and hash-linked event records.
+## Environment Variables
 
-## Notes
-- This is a local educational demo, not a production supply-chain platform.
-- The demo uses a custom on-chain record, not NFTs.
-- Blockchain records are append-only in this contract. The UI demonstrates event history and linked hashes; it does not offer an unsafe "edit old record" feature.
-- Do not commit private keys or `.env` files. Do not use real funds for this demo.
+**Backend `.env`**
+```
+PORT=5000
+NODE_ENV=development
+DATABASE_PATH=./db/tracepath.db
+CONTRACT_ADDRESS=0x_your_deployed_contract_address
+WALLET_ADDRESS=0x_your_wallet_address
+PRIVATE_KEY=0x_your_private_key
+```
+
+**Frontend `.env.local`**
+```
+VITE_API_URL=http://localhost:5000
+VITE_NETWORK=sepolia
+VITE_CHAIN_ID=11155111
+VITE_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY
+VITE_CONTRACT_ADDRESS=0x_your_deployed_contract_address
+```
